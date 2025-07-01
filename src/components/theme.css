@@ -1,0 +1,26 @@
+:root {
+  --primary-color: #3b82f6;
+  --primary-bg: #eaf2fe;
+  --primary-text: #1e293b;
+}
+
+body {
+  background: var(--primary-bg);
+  color: var(--primary-text);
+}
+
+.bg-primary-500 {
+  background-color: var(--primary-color) !important;
+}
+.text-primary-500 {
+  color: var(--primary-color) !important;
+}
+.hover\:bg-primary-600:hover {
+  background-color: var(--primary-color) !important;
+}
+.focus\:ring-primary-500:focus {
+  box-shadow: 0 0 0 2px var(--primary-color) !important;
+}
+.border-primary-500 {
+  border-color: var(--primary-color) !important;
+}

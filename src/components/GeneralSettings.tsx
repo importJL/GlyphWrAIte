@@ -1,10 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Save, RotateCcw } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import './theme.css'; // Import a CSS file for theme variables
 
 export default function GeneralSettings() {
   const { state, dispatch } = useAppContext();
   const { userSettings } = state;
+
+  // Theme switching effect
+  useEffect(() => {
+    const themeColors: Record<string, { color: string; bg: string }> = {
+      default: { color: '#3b82f6', bg: '#eaf2fe' }, // blue
+      zen: { color: '#10b981', bg: '#e6f7f1' },    // green
+      focus: { color: '#6366f1', bg: '#ecebfa' },  // indigo
+      warm: { color: '#f59e42', bg: '#fff4e6' },   // orange
+    };
+    const theme = themeColors[state.userSettings.theme] || themeColors.default;
+    document.documentElement.style.setProperty('--primary-color', theme.color);
+    document.documentElement.style.setProperty('--primary-bg', theme.bg);
+    // Set background on html and body for full coverage
+    document.documentElement.style.background = theme.bg;
+    document.body.style.background = theme.bg;
+  }, [state.userSettings.theme]);
+
+  // Save feedback state
+  const [showSaved, setShowSaved] = useState(false);
+  const handleSave = () => {
+    setShowSaved(true);
+    setTimeout(() => setShowSaved(false), 1500);
+  };
 
   const handleSettingChange = (key: keyof typeof userSettings, value: any) => {
     dispatch({
@@ -44,10 +68,16 @@ export default function GeneralSettings() {
             <RotateCcw size={16} />
             <span>Reset to Default</span>
           </button>
-          <button className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors flex items-center space-x-2">
+          <button
+            onClick={handleSave}
+            className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors flex items-center space-x-2"
+          >
             <Save size={16} />
             <span>Save Changes</span>
           </button>
+          {showSaved && (
+            <span className="ml-2 text-green-600 font-medium">Saved!</span>
+          )}
         </div>
       </div>
 

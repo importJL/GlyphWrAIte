@@ -2,7 +2,14 @@ import React from 'react';
 import { TrendingUp, Clock, Target, Award, Globe, PenTool } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
-export default function Dashboard() {
+// Define TabType locally for prop typing
+export type TabType = 'dashboard' | 'practice' | 'analytics' | 'settings' | 'ai-settings' | 'knowledge' | 'profile' | 'goal-setting';
+
+interface DashboardProps {
+  setActiveTab?: (tab: TabType) => void;
+}
+
+export default function Dashboard({ setActiveTab }: DashboardProps) {
   const { state } = useAppContext();
   const { sessions, currentLanguage, currentLevel } = state;
 
@@ -165,15 +172,24 @@ export default function Dashboard() {
           Quick Actions
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="bg-primary-500 text-white px-6 py-3 rounded-lg hover:bg-primary-600 transition-colors flex items-center justify-center space-x-2">
+          <button
+            className="bg-primary-500 text-white px-6 py-3 rounded-lg hover:bg-primary-600 transition-colors flex items-center justify-center space-x-2"
+            onClick={() => setActiveTab && setActiveTab('practice')}
+          >
             <PenTool size={18} />
             <span>Start Practice</span>
           </button>
-          <button className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2">
+          <button
+            className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2"
+            onClick={() => setActiveTab && setActiveTab('analytics')}
+          >
             <TrendingUp size={18} />
             <span>View Analytics</span>
           </button>
-          <button className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2">
+          <button
+            className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2"
+            onClick={() => setActiveTab && setActiveTab('goal-setting')}
+          >
             <Target size={18} />
             <span>Set Goals</span>
           </button>

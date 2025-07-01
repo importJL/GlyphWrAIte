@@ -92,6 +92,17 @@ export default function AISettings() {
   const visionModels = models.vision;
   const audioModels = models.audio;
 
+  // Add available audio models for OpenRouter
+  const availableAudioModels = [
+    { id: 'openai/whisper-1', name: 'OpenAI Whisper v1 (Recommended)' },
+    { id: 'openai/whisper-large-v3', name: 'OpenAI Whisper Large v3' },
+    { id: 'openai/whisper-medium', name: 'OpenAI Whisper Medium' },
+    { id: 'openai/whisper-small', name: 'OpenAI Whisper Small' },
+    { id: 'openai/whisper-base', name: 'OpenAI Whisper Base' },
+    { id: 'deepgram/whisper-large', name: 'Deepgram Whisper Large' },
+    { id: 'deepgram/whisper-tiny', name: 'Deepgram Whisper Tiny' },
+  ];
+
   const personas = [
     { value: 'encouraging', name: 'Encouraging Teacher', description: 'Positive, supportive, celebrates progress' },
     { value: 'strict', name: 'Strict Tutor', description: 'Direct feedback, high standards, corrects mistakes immediately' },
@@ -234,7 +245,7 @@ export default function AISettings() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Text Model Selection */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
@@ -330,6 +341,31 @@ export default function AISettings() {
                 </div>
               </label>
             ))}
+          </div>
+        </div>
+
+        {/* Audio Model Selection */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Audio Model</h3>
+            <span className="text-sm text-gray-500">{availableAudioModels.length} available</span>
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="audio-model-select" className="block text-sm font-medium text-gray-700 mb-1">Select Audio Model for Speech-to-Text</label>
+            <select
+              id="audio-model-select"
+              className="w-full border rounded px-3 py-2"
+              value={aiSettings.audioModel}
+              onChange={e => handleSettingChange('audioModel', e.target.value)}
+              title="Audio Model"
+            >
+              {availableAudioModels.map((model) => (
+                <option key={model.id} value={model.id}>{model.name}</option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              These models are available via OpenRouter and can be used with your API key.
+            </p>
           </div>
         </div>
       </div>

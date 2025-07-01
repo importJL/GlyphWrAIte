@@ -10,8 +10,9 @@ import UserProfile from './components/profile/UserProfile';
 import AuthPage from './components/auth/AuthPage';
 import { AppProvider } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import GoalSettingPage from './components/GoalSettingPage';
 
-type TabType = 'dashboard' | 'practice' | 'analytics' | 'settings' | 'ai-settings' | 'knowledge' | 'profile';
+type TabType = 'dashboard' | 'practice' | 'analytics' | 'settings' | 'ai-settings' | 'knowledge' | 'profile' | 'goal-setting';
 
 const tabs = [
   { id: 'dashboard', label: 'Dashboard', icon: Home },
@@ -21,6 +22,7 @@ const tabs = [
   { id: 'ai-settings', label: 'AI Settings', icon: Brain },
   { id: 'knowledge', label: 'Knowledge Base', icon: BookOpen },
   { id: 'profile', label: 'Profile', icon: User },
+  { id: 'goal-setting', label: 'Goal Setting', icon: User },
 ] as const;
 
 function AppContent() {
@@ -30,7 +32,7 @@ function AppContent() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard setActiveTab={setActiveTab} />;
       case 'practice':
         return <PracticeCanvas />;
       case 'analytics':
@@ -43,8 +45,10 @@ function AppContent() {
         return <KnowledgeBase />;
       case 'profile':
         return <UserProfile />;
+      case 'goal-setting':
+        return <GoalSettingPage />;
       default:
-        return <Dashboard />;
+        return <Dashboard setActiveTab={setActiveTab} />;
     }
   };
 
