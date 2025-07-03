@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Save, RotateCcw } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { openRouterService } from '../services/openrouter';
 import './theme.css'; // Import a CSS file for theme variables
 
 export default function GeneralSettings() {
@@ -57,6 +58,54 @@ export default function GeneralSettings() {
     { value: 'focus', name: 'Focus Purple', description: 'Deep concentration' },
     { value: 'warm', name: 'Warm Orange', description: 'Energetic and motivating' },
   ];
+
+  // AI Tips state
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiTips, setAiTips] = useState('');
+  const [isAITipsLoading, setIsAITipsLoading] = useState(false);
+  const [aiTipsError, setAiTipsError] = useState<string | null>(null);
+  const [aiLog, setAiLog] = useState<string[]>([]);
+  const { state: appState } = useAppContext();
+  const { aiSettings } = appState;
+
+  // Add Ask AI handler
+  const handleAskAI = async () => {
+    setIsAITipsLoading(true);
+    setAiTipsError(null);
+    setAiTips('');
+    setAiLog((log) => [...log, `Calling OpenRouter API with model: ${aiSettings.modelType || 'anthropic/claude-3.5-sonnet'}`]);
+    try {
+      // Use the selected text model from AI Settings
+      const model = aiSettings.modelType || 'anthropic/claude-3.5-sonnet';
+      const apiKey = localStorage.getItem('openrouter_api_key');
+      if (!apiKey) throw new Error('No OpenRouter API key configured.');
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: 'You are an expert language learning assistant. Give concise, actionable tips.' },
+            { role: 'user', content: aiQuestion }
+          ]
+        })
+      });
+      setAiLog((log) => [...log, `OpenRouter API response status: ${response.status}`]);
+      if (!response.ok) throw new Error(`OpenRouter API error: ${response.statusText}`);
+      const data = await response.json();
+      const tip = data.choices?.[0]?.message?.content || 'No response from AI.';
+      setAiTips(tip);
+      setAiLog((log) => [...log, 'AI response received and displayed.']);
+    } catch (err: any) {
+      setAiTipsError(err.message || 'Failed to get AI response.');
+      setAiLog((log) => [...log, `Error: ${err.message}`]);
+    } finally {
+      setIsAITipsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -232,6 +281,48 @@ export default function GeneralSettings() {
             </label>
           </div>
         </div>
+      </div>
+
+      {/* AI Tips Section */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Tips</h3>
+        <div className="flex space-x-2 mb-2">
+          <input
+            type="text"
+            className="flex-1 border rounded px-3 py-2"
+            placeholder="Ask AI for a tip or help..."
+            value={aiQuestion}
+            onChange={e => setAiQuestion(e.target.value)}
+          />
+          <button
+            className="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600 flex items-center space-x-1"
+            onClick={handleAskAI}
+            type="button"
+            disabled={isAITipsLoading || !aiQuestion.trim()}
+          >
+            {isAITipsLoading ? 'Calling OpenRouter...' : 'Ask AI'}
+          </button>
+        </div>
+        {aiTipsError && (
+          <div className="text-red-600 text-sm mb-2">{aiTipsError}</div>
+        )}
+        {isAITipsLoading ? (
+          <div className="text-blue-600 text-sm mb-2">Generating tip...</div>
+        ) : aiTips ? (
+          <div className="bg-blue-50 border border-blue-200 rounded p-3 mt-2 text-blue-900 whitespace-pre-line">
+            {aiTips}
+          </div>
+        ) : (
+          <div className="text-gray-500 text-sm">No AI tip yet. Ask something above!</div>
+        )}
+        {aiLog.length > 0 && (
+          <div className="mt-4 text-xs text-gray-500">
+            <div className="font-semibold mb-1">AI Call Log:</div>
+            <ul className="list-disc pl-5 space-y-1">
+              {aiLog.map((log, i) => <li key={i}>{log}</li>)}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

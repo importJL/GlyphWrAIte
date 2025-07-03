@@ -104,7 +104,8 @@ class OpenRouterService {
   };
 
   constructor() {
-    const savedKey = localStorage.getItem('openrouter_api_key');
+    // Use env variable for OpenRouter API key
+    const savedKey = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_OPENROUTER_API_KEY) ? import.meta.env.VITE_OPENROUTER_API_KEY : '';
     if (savedKey) {
       this.setApiKey(savedKey);
     }
@@ -293,18 +294,44 @@ class OpenRouterService {
     if (!this.apiKey) {
       throw new Error('OpenRouter API key not configured');
     }
-
     try {
-      // For now, simulate the response since we need to implement the actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      return `Practice writing "${character}" with smooth, confident strokes. Focus on proper stroke order for better muscle memory.`;
+      const prompt = `Give feedback for practicing the character "${character}" in ${language} at ${level} level. Persona: ${persona}.`;
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : '',
+          'X-Title': typeof document !== 'undefined' ? document.title : 'AIWriteCharacterLearning',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: 'You are an expert language learning assistant. Give concise, actionable feedback for handwriting practice.' },
+            { role: 'user', content: prompt }
+          ]
+        })
+      });
+      if (!response.ok) {
+        // Try to parse error message from OpenRouter
+        let errorMsg = `OpenRouter API error: ${response.statusText}`;
+        try {
+          const errData = await response.json();
+          if (errData.error && errData.error.message) errorMsg = errData.error.message;
+        } catch {}
+        throw new Error(errorMsg);
+      }
+      const data = await response.json();
+      if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+        throw new Error('No valid response from AI.');
+      }
+      return data.choices[0].message.content;
     } catch (error: any) {
       throw new Error(`Text feedback generation failed: ${error.message}`);
     }
   }
 
-  public async answerQuestion(
+  public async  answerQuestion(
     question: string,
     context: { character: string; language: string; level: string },
     model: string = 'anthropic/claude-3.5-sonnet'
@@ -312,12 +339,26 @@ class OpenRouterService {
     if (!this.apiKey) {
       throw new Error('OpenRouter API key not configured');
     }
-
     try {
-      // For now, simulate the response since we need to implement the actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      return `For "${context.character}" in ${context.language}, try breaking it down into smaller strokes and practice each component separately.`;
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          // 'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : '',
+          // 'X-Title': typeof document !== 'undefined' ? document.title : 'AIWriteCharacterLearning',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: 'You are an expert language learning assistant. Give concise, actionable tips.' },
+            { role: 'user', content: question }
+          ]
+        })
+      });
+      if (!response.ok) throw new Error(`OpenRouter API error: ${response.statusText}`);
+      const data = await response.json();
+      return data.choices?.[0]?.message?.content || 'No response from AI.';
     } catch (error: any) {
       throw new Error(`Question answering failed: ${error.message}`);
     }
@@ -327,6 +368,15 @@ class OpenRouterService {
     if (this.apiKey) {
       await this.fetchAvailableModels();
     }
+  }
+}
+
+declare global {
+  interface ImportMeta {
+    env: {
+      VITE_OPENROUTER_API_KEY?: string;
+      [key: string]: string | undefined;
+    };
   }
 }
 

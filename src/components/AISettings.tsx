@@ -12,6 +12,8 @@ export default function AISettings() {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [isRefreshingModels, setIsRefreshingModels] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const [showSaved, setShowSaved] = useState(false);
+  const [lastSettings, setLastSettings] = useState(aiSettings);
 
   useEffect(() => {
     setConnectionStatus(openRouterService.getConnectionStatus());
@@ -87,8 +89,22 @@ export default function AISettings() {
     }
   };
 
+  const handleSave = () => {
+    setShowSaved(true);
+    setLastSettings(aiSettings);
+    setTimeout(() => setShowSaved(false), 1500);
+  };
+
   const models = openRouterService.models;
-  const textModels = models.text;
+  const textModels = [
+    {
+      id: 'qwen/qwen3-8b:free',
+      name: 'Qwen3-8B (Free)',
+      description: 'Alibaba Qwen3-8B, open/free model for general language tasks',
+      costPerMToken: { input: 0, output: 0 },
+      context_length: 128000,
+    },
+  ];
   const visionModels = models.vision;
   const audioModels = models.audio;
 
@@ -119,10 +135,17 @@ export default function AISettings() {
             <RotateCcw size={16} />
             <span>Reset to Default</span>
           </button>
-          <button className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors flex items-center space-x-2">
+          <button
+            className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors flex items-center space-x-2"
+            onClick={handleSave}
+            disabled={JSON.stringify(aiSettings) === JSON.stringify(lastSettings)}
+          >
             <Save size={16} />
             <span>Save Changes</span>
           </button>
+          {showSaved && (
+            <span className="ml-2 text-green-600 font-medium">Saved!</span>
+          )}
         </div>
       </div>
 
