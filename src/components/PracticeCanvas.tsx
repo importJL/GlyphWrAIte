@@ -19,6 +19,15 @@ export default function PracticeCanvas() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isAnswering, setIsAnswering] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState({ connected: false, hasKey: false });
+  const [submittedResults, setSubmittedResults] = useState<Array<{
+    character: string;
+    language: string;
+    level: string;
+    timestamp: Date;
+    pass: string;
+    modelGuess: string;
+    score: number;
+  }>>([]);
   
   const { state, dispatch } = useAppContext();
   const { state: authState } = useAuth();
@@ -171,6 +180,9 @@ export default function PracticeCanvas() {
     setIsAnalyzing(true);
     let score = Math.floor(Math.random() * 40) + 60; // Default fallback score
     let feedback = 'Good effort! Keep practicing to improve your technique.';
+    let modelGuess = '';
+    let pass = '';
+    let aiRaw = '';
 
     // Use AI analysis if available and vision is enabled
     if (connectionStatus.hasKey && aiSettings.videoAssisted) {
@@ -181,17 +193,31 @@ export default function PracticeCanvas() {
           language: currentLanguage,
           level: currentLevel,
           canvasData,
-          persona: aiSettings.persona
+          persona: aiSettings.persona,
+          visionModel: aiSettings.visionModel
         });
-        
         score = result.score;
-        feedback = result.feedback;
-        
-        // Add AI feedback to tips
+        modelGuess = result.modelGuess;
+        pass = result.pass;
+        aiRaw = result.raw;
         setAiTips(prev => [
-          `AI Analysis: ${feedback}`,
-          ...result.suggestions.map(s => `💡 ${s}`),
+          `AI Analysis: ${aiRaw}`,
+          `Model Guess: ${modelGuess}`,
+          `Accuracy Score: ${score}%`,
+          `Grade: ${pass}`,
           ...prev.slice(0, 2)
+        ]);
+        setSubmittedResults(prev => [
+          {
+            character: currentCharacter,
+            language: currentLanguage,
+            level: currentLevel,
+            timestamp: new Date(),
+            pass,
+            modelGuess,
+            score
+          },
+          ...prev
         ]);
       } catch (error) {
         console.error('AI analysis failed:', error);
@@ -218,7 +244,7 @@ export default function PracticeCanvas() {
     setIsAnalyzing(false);
     
     // Show feedback
-    alert(`${connectionStatus.hasKey && aiSettings.videoAssisted ? 'AI Analysis Complete!' : 'Practice Submitted!'}\n\nScore: ${score}%\n${feedback}`);
+    alert(`${connectionStatus.hasKey && aiSettings.videoAssisted ? `AI Analysis Complete!\n\nOverall assessment: ${pass}\nEvaluated character: ${modelGuess}\nAccuracy score: ${score}` : `Practice Submitted!\n\nScore: ${score}%\n${feedback}`}`);
     clearCanvas();
   };
 
@@ -275,18 +301,35 @@ export default function PracticeCanvas() {
   };
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-6 gap-6">
-      {/* Character Selection Sidebar */}
-      <div className="xl:col-span-2 space-y-4">
+    <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+      {/* Left Sidebar: CharacterSelector + Results, now wider */}
+      <div className="xl:col-span-1 min-w-[260px] max-w-xs flex flex-col space-y-4">
         <CharacterSelector
           language={currentLanguage}
           currentCharacter={currentCharacter}
           onCharacterSelect={handleCharacterSelect}
           onCharacterInfoChange={handleCharacterInfoChange}
         />
+        <div className="bg-white rounded-lg shadow p-4 flex-1">
+          <h3 className="font-semibold text-gray-900 mb-2">Submitted Results</h3>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {submittedResults.length === 0 ? (
+              <div className="text-gray-500 text-sm">No submissions yet.</div>
+            ) : (
+              submittedResults.map((res, idx) => (
+                <div key={idx} className="border-l-4 pl-2 py-1 mb-2 rounded border-primary-500 bg-gray-50">
+                  <div className="text-xs text-gray-700 font-semibold">{res.character} ({res.language})</div>
+                  <div className="text-xs text-gray-500">{res.level} | {res.timestamp.toLocaleString()}</div>
+                  <div className="text-xs">Result: <span className={res.pass === 'Pass' ? 'text-green-600' : 'text-red-600'}>{res.pass}</span></div>
+                  <div className="text-xs">AI Guess: <span className="font-mono">{res.modelGuess}</span></div>
+                  <div className="text-xs">Accuracy: <span className="font-mono">{res.score}</span></div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
-
-      {/* Main Canvas Area */}
+      {/* Main Canvas Area: now takes 3 columns */}
       <div className="xl:col-span-3 space-y-4">
         {/* User Info */}
         {authState.user && (
@@ -507,7 +550,7 @@ export default function PracticeCanvas() {
         </div>
       </div>
 
-      {/* Character Information Panel */}
+      {/* Character Information Panel: right sidebar, 1 column */}
       <div className="xl:col-span-1">
         <CharacterInfoPanel 
           characterInfo={currentCharacterInfo}

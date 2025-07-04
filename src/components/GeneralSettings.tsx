@@ -19,9 +19,9 @@ export default function GeneralSettings() {
     const theme = themeColors[state.userSettings.theme] || themeColors.default;
     document.documentElement.style.setProperty('--primary-color', theme.color);
     document.documentElement.style.setProperty('--primary-bg', theme.bg);
-    // Set background on html and body for full coverage
-    document.documentElement.style.background = theme.bg;
-    document.body.style.background = theme.bg;
+    // Remove direct background assignments to html/body to allow Tailwind dark mode to work
+    // document.documentElement.style.background = theme.bg;
+    // document.body.style.background = theme.bg;
   }, [state.userSettings.theme]);
 
   // Save feedback state

@@ -23,4 +23,5 @@ export default {
     },
   },
   plugins: [],
+  darkMode: 'class', // Explicitly enable class-based dark mode
 }

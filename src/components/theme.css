@@ -4,10 +4,13 @@
   --primary-text: #1e293b;
 }
 
+/* Remove body background and color to allow Tailwind dark mode to work */
+/*
 body {
   background: var(--primary-bg);
   color: var(--primary-text);
 }
+*/
 
 .bg-primary-500 {
   background-color: var(--primary-color) !important;

@@ -125,13 +125,42 @@ export default function AISettings() {
     { value: 'neutral', name: 'Neutral Guide', description: 'Balanced approach, objective feedback, factual guidance' },
   ];
 
+  // Vision model options (restricted to only the two requested models)
+  const visionModelOptions = [
+    {
+      value: 'qwen/qwen2.5-vl-32b-instruct:free',
+      label: 'Qwen: Qwen2.5 VL 32B Instruct (free)'
+    },
+    {
+      value: 'mistral/mistral-small-3.2-24b:free',
+      label: 'Mistral: Mistral Small 3.2 24B (free)'
+    }
+  ];
+
+  // Provide fallback vision model descriptions and costs for UI rendering
+  const visionModelDescriptions: Record<string, { description: string; costPerMToken: { input: number; output: number }; context_length?: number }> = {
+    'qwen/qwen2.5-vl-32b-instruct:free': {
+      description: 'Qwen2.5 VL 32B Instruct, open/free vision-language model for image analysis',
+      costPerMToken: { input: 0, output: 0 },
+      context_length: 128000,
+    },
+    'mistral/mistral-small-3.2-24b:free': {
+      description: 'Mistral Small 3.2 24B, open/free vision model for image analysis',
+      costPerMToken: { input: 0, output: 0 },
+      context_length: 128000,
+    },
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">AI Settings</h2>
-        <div className="flex space-x-2">
-          <button onClick={resetSettings} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-2">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">AI Settings</h2>
+        <div className="flex space-x-2 items-center">
+          <button
+            onClick={resetSettings}
+            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-2"
+          >
             <RotateCcw size={16} />
             <span>Reset to Default</span>
           </button>
@@ -323,47 +352,50 @@ export default function AISettings() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Vision Analysis Model</h3>
-            <span className="text-sm text-gray-500">{visionModels.length} available</span>
+            <span className="text-sm text-gray-500">{visionModelOptions.length} available</span>
           </div>
           <div className="space-y-3 max-h-96 overflow-y-auto">
-            {visionModels.map((model) => (
-              <label key={model.id} className="block">
-                <div className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                  aiSettings.visionModel === model.id 
-                    ? 'border-primary-500 bg-primary-50' 
-                    : 'border-gray-200 hover:border-primary-300'
-                }`}>
-                  <div className="flex items-start space-x-3">
-                    <input
-                      type="radio"
-                      name="visionModel"
-                      value={model.id}
-                      checked={aiSettings.visionModel === model.id}
-                      onChange={(e) => handleSettingChange('visionModel', e.target.value)}
-                      className="mt-1"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="font-medium text-gray-900 truncate">{model.name}</h4>
-                        <Video size={16} className="text-blue-500" />
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{model.description}</p>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <div className="flex space-x-3">
-                          <span>In: ${model.costPerMToken.input.toFixed(2)}/1M</span>
-                          <span>Out: ${model.costPerMToken.output.toFixed(2)}/1M</span>
+            {visionModelOptions.map((model) => {
+              const meta = visionModelDescriptions[model.value];
+              return (
+                <label key={model.value} className="block">
+                  <div className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    aiSettings.visionModel === model.value 
+                      ? 'border-primary-500 bg-primary-50' 
+                      : 'border-gray-200 hover:border-primary-300'
+                  }`}>
+                    <div className="flex items-start space-x-3">
+                      <input
+                        type="radio"
+                        name="visionModel"
+                        value={model.value}
+                        checked={aiSettings.visionModel === model.value}
+                        onChange={(e) => handleSettingChange('visionModel', e.target.value)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h4 className="font-medium text-gray-900 truncate">{model.label}</h4>
+                          <Video size={16} className="text-blue-500" />
                         </div>
-                        {model.context_length && (
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                            {(model.context_length / 1000).toFixed(0)}K ctx
-                          </span>
-                        )}
+                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">{meta?.description || ''}</p>
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <div className="flex space-x-3">
+                            <span>In: ${meta?.costPerMToken.input.toFixed(2)}/1M</span>
+                            <span>Out: ${meta?.costPerMToken.output.toFixed(2)}/1M</span>
+                          </div>
+                          {meta?.context_length && (
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                              {(meta.context_length / 1000).toFixed(0)}K ctx
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </label>
-            ))}
+                </label>
+              );
+            })}
           </div>
         </div>
 

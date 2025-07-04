@@ -38,6 +38,13 @@ interface FeedbackResponse {
   suggestions: string[];
 }
 
+interface VisionAnalysisResponse {
+  score: number;
+  modelGuess: string;
+  pass: boolean;
+  feedback: string;
+}
+
 class OpenRouterService {
   private apiKey: string = '';
   private isConnected: boolean = false;
@@ -261,24 +268,38 @@ class OpenRouterService {
     ).slice(0, 8); // Limit to 8 models per category
   }
 
-  public async analyzeHandwriting(request: FeedbackRequest): Promise<FeedbackResponse> {
+  public async analyzeHandwriting(request: FeedbackRequest & { visionModel: string }): Promise<{ pass: string; modelGuess: string; score: number; raw: string }> {
     if (!this.apiKey) {
       throw new Error('OpenRouter API key not configured');
     }
-
     try {
-      // For now, simulate the analysis since we need to implement the actual API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const score = Math.floor(Math.random() * 30) + 70;
-      const feedback = `Your handwriting of "${request.character}" shows good structure. Focus on stroke consistency.`;
-      const suggestions = [
-        'Practice proper stroke order',
-        'Maintain consistent character size',
-        'Focus on balanced proportions'
-      ];
-
-      return { score, feedback, suggestions };
+      const prompt = `You are a handwriting recognition AI. Evaluate the provided image and provide the following results in the following format:\n1) Overall assessment: Pass or Fail\n2) Evaluated character: <AI's interpretation of the drawn character>\n3) Accuracy score: <0-100>`;
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: request.visionModel,
+          messages: [
+            { role: 'system', content: prompt },
+            { role: 'user', content: `Target: ${request.character}\nLanguage: ${request.language}\nLevel: ${request.level}\nPersona: ${request.persona}\nImage (base64 PNG): ${request.canvasData}` }
+          ]
+        })
+      });
+      if (!response.ok) throw new Error(`OpenRouter API error: ${response.statusText}`);
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content || '';
+      // Extract Pass/Fail, Evaluated character, and Accuracy score
+      let pass = '', modelGuess = '', score = 0;
+      const passMatch = content.match(/Overall assessment:\s*(Pass|Fail)/i);
+      if (passMatch) pass = passMatch[1];
+      const guessMatch = content.match(/Evaluated character:\s*([\S ])/i);
+      if (guessMatch) modelGuess = guessMatch[1];
+      const scoreMatch = content.match(/Accuracy score:\s*(\d+)/i);
+      if (scoreMatch) score = parseInt(scoreMatch[1], 10);
+      return { pass, modelGuess, score, raw: content };
     } catch (error: any) {
       throw new Error(`Handwriting analysis failed: ${error.message}`);
     }

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { PenTool, BarChart3, Settings, Brain, BookOpen, Home, LogOut, User } from 'lucide-react';
+import React, { useState, useLayoutEffect } from 'react';
+import { PenTool, BarChart3, Settings, Brain, BookOpen, Home, LogOut, User, Sun, Moon } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import PracticeCanvas from './components/PracticeCanvas';
 import Analytics from './components/Analytics';
@@ -28,6 +28,21 @@ const tabs = [
 function AppContent() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const { state: authState, logout } = useAuth();
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') || 'light';
+    }
+    return 'light';
+  });
+  useLayoutEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+  const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
 
   const renderContent = () => {
     switch (activeTab) {
@@ -57,17 +72,24 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             Language Learning Platform
           </h1>
           <div className="flex items-center space-x-4">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-200">
               Welcome, {authState.user?.name}
             </div>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            >
+              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+            </button>
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                 <span className="text-primary-600 font-semibold text-sm">
@@ -76,7 +98,7 @@ function AppContent() {
               </div>
               <button
                 onClick={logout}
-                className="text-gray-600 hover:text-gray-800 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 title="Logout"
               >
                 <LogOut size={18} />
