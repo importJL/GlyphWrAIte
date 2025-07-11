@@ -109,7 +109,6 @@ function AppContent() {
             </div>
           </div>
       </header>
-    </header>
 
       {/* Navigation */}
       <nav className="bg-white border-b border-gray-200 px-6 py-2">
