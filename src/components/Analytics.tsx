@@ -1,8 +1,10 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, Clock, Award, Target, Download, Share2, User } from 'lucide-react';
+import { TrendingUp, Clock, Award, Target, Download, Share2, User, FileText, Database, Image } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function Analytics() {
   const { state } = useAppContext();
@@ -91,12 +93,14 @@ export default function Analytics() {
     : 0;
   const bestStreak = 7; // This would be calculated based on consecutive days
 
-  const downloadReport = () => {
+  const downloadReport = async (format: 'pdf' | 'csv' | 'json' | 'png') => {
     if (!authState.user) {
       alert('Please log in to download your report');
       return;
     }
 
+    const fileName = `${authState.user.name.replace(/\s+/g, '-')}-learning-report-${new Date().toISOString().split('T')[0]}`;
+    
     const reportData = {
       user: {
         name: authState.user.name,
@@ -114,13 +118,97 @@ export default function Analytics() {
       generatedAt: new Date().toISOString(),
     };
 
-    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+    switch (format) {
+      case 'json':
+        const jsonBlob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+        downloadFile(jsonBlob, `${fileName}.json`);
+        break;
+        
+      case 'csv':
+        const csvContent = generateCSV(reportData);
+        const csvBlob = new Blob([csvContent], { type: 'text/csv' });
+        downloadFile(csvBlob, `${fileName}.csv`);
+        break;
+        
+      case 'pdf':
+        await generatePDF(reportData, fileName);
+        break;
+        
+      case 'png':
+        await generatePNG(fileName);
+        break;
+    }
+  };
+
+  const downloadFile = (blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${authState.user.name.replace(/\s+/g, '-')}-learning-report-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = filename;
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const generateCSV = (data: any) => {
+    const headers = ['Date', 'Language', 'Character', 'Score', 'Duration (min)', 'Level'];
+    const rows = data.sessions.map((session: any) => [
+      new Date(session.timestamp).toLocaleDateString(),
+      session.language,
+      session.character,
+      session.score,
+      Math.floor(session.duration / 60),
+      session.level
+    ]);
+    
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
+  };
+
+  const generatePDF = async (data: any, fileName: string) => {
+    const pdf = new jsPDF();
+    
+    // Title
+    pdf.setFontSize(20);
+    pdf.text('Language Learning Report', 20, 30);
+    
+    // User info
+    pdf.setFontSize(12);
+    pdf.text(`User: ${data.user.name}`, 20, 50);
+    pdf.text(`Email: ${data.user.email}`, 20, 60);
+    pdf.text(`Generated: ${new Date(data.generatedAt).toLocaleDateString()}`, 20, 70);
+    
+    // Summary
+    pdf.setFontSize(16);
+    pdf.text('Summary', 20, 90);
+    pdf.setFontSize(12);
+    pdf.text(`Total Sessions: ${data.summary.totalSessions}`, 20, 105);
+    pdf.text(`Total Practice Time: ${data.summary.totalTime} hours`, 20, 115);
+    pdf.text(`Average Score: ${data.summary.averageScore}%`, 20, 125);
+    pdf.text(`Current Streak: ${data.summary.bestStreak} days`, 20, 135);
+    
+    // Sessions table
+    pdf.setFontSize(16);
+    pdf.text('Recent Sessions', 20, 155);
+    
+    let yPos = 170;
+    pdf.setFontSize(10);
+    data.sessions.slice(0, 10).forEach((session: any) => {
+      const sessionText = `${new Date(session.timestamp).toLocaleDateString()} - ${session.language} - ${session.character} - ${session.score}%`;
+      pdf.text(sessionText, 20, yPos);
+      yPos += 10;
+    });
+    
+    pdf.save(`${fileName}.pdf`);
+  };
+
+  const generatePNG = async (fileName: string) => {
+    const element = document.getElementById('analytics-content');
+    if (!element) return;
+    
+    const canvas = await html2canvas(element);
+    const link = document.createElement('a');
+    link.download = `${fileName}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
   };
 
   const shareStats = () => {
@@ -157,7 +245,7 @@ export default function Analytics() {
   }
 
   return (
-    <div className="space-y-6">
+    <div id="analytics-content" className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -165,10 +253,28 @@ export default function Analytics() {
           <p className="text-gray-600">Personal progress for {authState.user.name}</p>
         </div>
         <div className="flex space-x-2">
-          <button onClick={downloadReport} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-2">
-            <Download size={16} />
-            <span>Download Report</span>
-          </button>
+          <div className="relative group">
+            <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-2">
+              <Download size={16} />
+              <span>Download Report</span>
+            </button>
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+              <div className="py-1">
+                <button onClick={() => downloadReport('pdf')} className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <FileText size={16} className="mr-2" /> PDF Report
+                </button>
+                <button onClick={() => downloadReport('csv')} className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <Database size={16} className="mr-2" /> CSV Data
+                </button>
+                <button onClick={() => downloadReport('json')} className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <Database size={16} className="mr-2" /> JSON Data
+                </button>
+                <button onClick={() => downloadReport('png')} className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <Image size={16} className="mr-2" /> PNG Image
+                </button>
+              </div>
+            </div>
+          </div>
           <button onClick={shareStats} className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors flex items-center space-x-2">
             <Share2 size={16} />
             <span>Share Progress</span>

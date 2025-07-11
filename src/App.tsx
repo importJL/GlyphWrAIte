@@ -90,23 +90,26 @@ function AppContent() {
             >
               {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                <span className="text-primary-600 font-semibold text-sm">
-                  {authState.user?.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <button
-                onClick={logout}
-                className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                title="Logout"
-              >
-                <LogOut size={18} />
-              </button>
+            <button
+              onClick={() => setActiveTab('profile')}
+              className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center hover:bg-primary-200 transition-colors"
+              title="Go to Profile"
+            >
+              <span className="text-primary-600 font-semibold text-sm">
+                {authState.user?.name.charAt(0).toUpperCase()}
+              </span>
+            </button>
+            <button
+              onClick={logout}
+              className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Logout"
+            >
+              <LogOut size={18} />
+            </button>
             </div>
           </div>
-        </div>
       </header>
+    </header>
 
       {/* Navigation */}
       <nav className="bg-white border-b border-gray-200 px-6 py-2">

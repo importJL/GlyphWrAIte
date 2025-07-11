@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Save, RotateCcw } from 'lucide-react';
+import { Save, RotateCcw, Mail } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { openRouterService } from '../services/openrouter';
 import './theme.css'; // Import a CSS file for theme variables
 
 export default function GeneralSettings() {
   const { state, dispatch } = useAppContext();
+  const { state: authState } = useAuth();
   const { userSettings } = state;
+  const [practiceReminders, setPracticeReminders] = useState(false);
+  const [autoSavePractice, setAutoSavePractice] = useState(true);
 
   // Theme switching effect
   useEffect(() => {
@@ -104,6 +108,37 @@ export default function GeneralSettings() {
       setAiLog((log) => [...log, `Error: ${err.message}`]);
     } finally {
       setIsAITipsLoading(false);
+    }
+  };
+
+  const sendEmailReminder = async (userEmail: string) => {
+    try {
+      // In a real application, this would call your backend API to send emails
+      // For demo purposes, we'll simulate the email sending
+      console.log(`Sending practice reminder email to: ${userEmail}`);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Show success message
+      alert(`✅ Practice reminder email sent to ${userEmail}!\n\nYou will receive daily reminders to keep up with your language learning practice.`);
+      
+      // In a real app, you might want to:
+      // - Call your backend API endpoint
+      // - Use a service like EmailJS for client-side email sending
+      // - Integrate with services like SendGrid, Mailgun, etc.
+      
+    } catch (error) {
+      console.error('Failed to send email reminder:', error);
+      alert('❌ Failed to send email reminder. Please try again.');
+    }
+  };
+
+  const handlePracticeRemindersChange = async (enabled: boolean) => {
+    setPracticeReminders(enabled);
+    
+    if (enabled && authState.user?.email) {
+      await sendEmailReminder(authState.user.email);
     }
   };
 
@@ -265,7 +300,12 @@ export default function GeneralSettings() {
               <p className="text-sm text-gray-600">Automatically save your writing practice</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
+              <input 
+                type="checkbox" 
+                className="sr-only peer" 
+                checked={autoSavePractice}
+                onChange={(e) => setAutoSavePractice(e.target.checked)}
+              />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
           </div>
@@ -273,10 +313,23 @@ export default function GeneralSettings() {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium text-gray-900">Practice Reminders</p>
-              <p className="text-sm text-gray-600">Get daily reminders to practice</p>
+              <p className="text-sm text-gray-600">
+                Get daily reminders to practice
+                {authState.user?.email && (
+                  <span className="block text-xs text-blue-600 mt-1">
+                    <Mail size={12} className="inline mr-1" />
+                    Emails sent to: {authState.user.email}
+                  </span>
+                )}
+              </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
+              <input 
+                type="checkbox" 
+                className="sr-only peer" 
+                checked={practiceReminders}
+                onChange={(e) => handlePracticeRemindersChange(e.target.checked)}
+              />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
           </div>

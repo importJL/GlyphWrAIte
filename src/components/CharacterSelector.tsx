@@ -89,13 +89,13 @@ export default function CharacterSelector({
   const languageInfo = getLanguageInfo(language);
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 space-y-4">
+    <div className="bg-white rounded-lg shadow p-4 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <span className="text-2xl">{languageInfo.flag}</span>
+          <span className="text-xl">{languageInfo.flag}</span>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-base font-semibold text-gray-900">
               {languageInfo.name} Characters
             </h3>
             <p className="text-sm text-gray-600">
@@ -114,24 +114,24 @@ export default function CharacterSelector({
 
       {/* Search */}
       <div className="relative">
-        <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         <input
           type="text"
           placeholder="Search characters, definitions, or examples..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1">
         <div className="flex items-center space-x-2">
           <Filter size={16} className="text-gray-400" />
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="all">All Categories</option>
             {categories.map(category => (
@@ -147,7 +147,7 @@ export default function CharacterSelector({
           <select
             value={selectedDifficulty}
             onChange={(e) => setSelectedDifficulty(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="all">All Levels</option>
             <option value="beginner">Beginner</option>
@@ -160,25 +160,25 @@ export default function CharacterSelector({
       {/* Character Grid */}
       <div className="max-h-96 overflow-y-auto">
         {filteredCharacters.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {filteredCharacters.map((char, index) => (
               <button
                 key={index}
                 onClick={() => onCharacterSelect(char.character)}
-                className={`p-4 border-2 rounded-lg transition-all hover:shadow-md ${
+                className={`p-3 border-2 rounded-lg transition-all hover:shadow-md ${
                   currentCharacter === char.character
                     ? 'border-primary-500 bg-primary-50'
                     : 'border-gray-200 hover:border-primary-300'
                 }`}
               >
-                <div className="text-2xl font-bold text-center mb-2">
+                <div className="text-xl font-bold text-center mb-2">
                   {char.character}
                 </div>
-                <div className="text-xs text-center space-y-1">
+                <div className="text-sm text-center space-y-2 min-h-0">
                   <div className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(char.difficulty)}`}>
                     {char.difficulty}
                   </div>
-                  <div className="text-gray-600 truncate" title={char.definition}>
+                  <div className="text-gray-600 text-xs leading-tight" title={char.definition}>
                     {char.definition}
                   </div>
                   {char.pronunciation && (
@@ -205,14 +205,14 @@ export default function CharacterSelector({
 
       {/* Category Info */}
       {selectedCategory !== 'all' && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
           <div className="flex items-center space-x-2 mb-1">
             <BookOpen size={16} className="text-blue-500" />
-            <h4 className="font-medium text-blue-800">
+            <h4 className="font-medium text-blue-800 text-sm">
               {categories.find(cat => cat.id === selectedCategory)?.name}
             </h4>
           </div>
-          <p className="text-sm text-blue-700">
+          <p className="text-xs text-blue-700">
             {categories.find(cat => cat.id === selectedCategory)?.description}
           </p>
         </div>

@@ -302,35 +302,35 @@ export default function PracticeCanvas() {
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-      {/* Left Sidebar: CharacterSelector + Results, now wider */}
-      <div className="xl:col-span-1 min-w-[260px] max-w-xs flex flex-col space-y-4">
+      {/* Left Sidebar: CharacterSelector + Results, increased width for better spacing */}
+      <div className="xl:col-span-1 min-w-[380px] flex flex-col space-y-4">
         <CharacterSelector
           language={currentLanguage}
           currentCharacter={currentCharacter}
           onCharacterSelect={handleCharacterSelect}
           onCharacterInfoChange={handleCharacterInfoChange}
         />
-        <div className="bg-white rounded-lg shadow p-4 flex-1">
-          <h3 className="font-semibold text-gray-900 mb-2">Submitted Results</h3>
-          <div className="space-y-2 max-h-96 overflow-y-auto">
+        <div className="bg-white rounded-lg shadow p-6 flex-1 min-h-[300px]">
+          <h3 className="font-semibold text-gray-900 mb-4">Submitted Results</h3>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
             {submittedResults.length === 0 ? (
               <div className="text-gray-500 text-sm">No submissions yet.</div>
             ) : (
               submittedResults.map((res, idx) => (
-                <div key={idx} className="border-l-4 pl-2 py-1 mb-2 rounded border-primary-500 bg-gray-50">
-                  <div className="text-xs text-gray-700 font-semibold">{res.character} ({res.language})</div>
-                  <div className="text-xs text-gray-500">{res.level} | {res.timestamp.toLocaleString()}</div>
-                  <div className="text-xs">Result: <span className={res.pass === 'Pass' ? 'text-green-600' : 'text-red-600'}>{res.pass}</span></div>
-                  <div className="text-xs">AI Guess: <span className="font-mono">{res.modelGuess}</span></div>
-                  <div className="text-xs">Accuracy: <span className="font-mono">{res.score}</span></div>
+                <div key={idx} className="border-l-4 pl-4 py-3 mb-3 rounded border-primary-500 bg-gray-50">
+                  <div className="text-base text-gray-700 font-semibold mb-2">{res.character} ({res.language})</div>
+                  <div className="text-sm text-gray-500 mb-2">{res.level} | {res.timestamp.toLocaleString()}</div>
+                  <div className="text-sm mb-2">Result: <span className={res.pass === 'Pass' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>{res.pass}</span></div>
+                  <div className="text-sm mb-2">AI Guess: <span className="font-mono bg-white px-2 py-1 rounded">{res.modelGuess}</span></div>
+                  <div className="text-sm">Accuracy: <span className="font-mono bg-white px-2 py-1 rounded font-semibold">{res.score}%</span></div>
                 </div>
               ))
             )}
           </div>
         </div>
       </div>
-      {/* Main Canvas Area: now takes 3 columns */}
-      <div className="xl:col-span-3 space-y-4">
+      {/* Main Canvas Area: adjusted to take remaining space with better proportions */}
+      <div className="xl:col-span-2 space-y-4 min-w-0">
         {/* User Info */}
         {authState.user && (
           <div className="bg-white rounded-lg shadow p-4">
@@ -375,7 +375,7 @@ export default function PracticeCanvas() {
 
         {/* Controls */}
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 min-w-0">
             <div className="flex items-center space-x-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -440,7 +440,7 @@ export default function PracticeCanvas() {
 
         {/* Drawing Tools */}
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center space-x-2">
               <Palette size={20} className="text-gray-600" />
               <input
@@ -462,14 +462,14 @@ export default function PracticeCanvas() {
               />
               <span className="text-sm text-gray-600 w-8">{brushSize}px</span>
             </div>
-            <div className="text-3xl font-bold text-primary-500">
+            <div className="text-2xl md:text-3xl font-bold text-primary-500 flex-shrink-0">
               Practice: {currentCharacter}
             </div>
           </div>
         </div>
 
         {/* Canvas */}
-        <div className="canvas-container">
+        <div className="canvas-container overflow-x-auto">
           <canvas
             ref={canvasRef}
             width={canvasDimensions.width}
@@ -550,8 +550,8 @@ export default function PracticeCanvas() {
         </div>
       </div>
 
-      {/* Character Information Panel: right sidebar, 1 column */}
-      <div className="xl:col-span-1">
+      {/* Character Information Panel: right sidebar, increased width for better readability */}
+      <div className="xl:col-span-2 min-w-[320px]">
         <CharacterInfoPanel 
           characterInfo={currentCharacterInfo}
           language={currentLanguage}
